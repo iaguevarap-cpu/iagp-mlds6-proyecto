@@ -19,11 +19,11 @@
 
 ## 3. Referencias a rutas o bases de datos origen y destino
 
-- [ ] Especificar las rutas o bases de datos de origen y destino para los datos.
+`kagglehub.dataset_download("robinreni/signature-verification-dataset")`
 
 ## 4. Rutas de origen de datos
 
-- [ ] Especificar la ubicación de los archivos de origen de los datos.
+`kagglehub.dataset_download("robinreni/signature-verification-dataset")`
 
 ### 4.2 Descripción General del Dataset
 
