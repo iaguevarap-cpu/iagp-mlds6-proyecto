@@ -155,11 +155,42 @@ El sistema clasifica cada verificación en tres niveles de acción:
 
 ## 8. Equipo del Proyecto
 
-- Ivonne Guevara lider y cientifica de datos
+- Ivonne Guevara: lider y cientifica de datos
+- TBD: Ingeniero de ML
 
-## 9. Presupuesto
+## 9. Presupuesto del Proyecto
 
-[Descripción del presupuesto asignado al proyecto]
+El presupuesto se estima considerando los recursos humanos requeridos para cada
+fase CRISP-DM, los costos de infraestructura computacional para el entrenamiento
+del modelo de Red Siamesa, y los gastos misceláneos asociados al proyecto.
+
+| Categoría de Gasto | Descripción | Costo Estimado (USD) | Notas / Consideraciones |
+| :----------------- | :---------- | :------------------- | :---------------------- |
+| **I. Personal** | | | |
+| Científico de Datos | Diseño de la arquitectura Siamesa, preprocesamiento de imágenes, optimización de hiperparámetros, evaluación del modelo. | $6,000 | 2 meses a tiempo parcial |
+| Ingeniero de ML | Implementación del pipeline de datos, experimentos de entrenamiento, EDA, desarrollo de la app Streamlit. | $4,000 | 2 meses a tiempo parcial |
+| **II. Infraestructura y Software** | | | |
+| Plataforma Cloud (GPU) | Google Colab Pro / AWS para entrenamiento de la Red Siamesa (instancias con GPU T4/A100). | $150 | ~50 horas de GPU; el entrenamiento con el dataset CEDAR es ligero en comparación con proyectos de visión a gran escala |
+| Almacenamiento Cloud | Google Drive / S3 para dataset CEDAR (~35 MB), checkpoints del modelo (`.keras`) y artefactos del proyecto. | $0 | El tamaño reducido del dataset cabe en los planes gratuitos de Google Drive y Kaggle |
+| Licencias de Software | Herramientas de desarrollo e IDEs. | $0 | Se utilizarán exclusivamente herramientas open-source: Python, TensorFlow/Keras, OpenCV, scikit-learn, Streamlit, Git |
+| Despliegue de la aplicación | Hosting de la app Streamlit para demostración del modelo. | $0 | Streamlit Cloud ofrece despliegue gratuito para proyectos públicos |
+| **III. Misceláneos** | | | |
+| Investigación y Desarrollo | Tiempo para revisión de literatura sobre redes Siamesas, falsificación de firmas y técnicas de verificación biométrica. | $500 | Horas dedicadas a exploración de arquitecturas alternativas y resolución de problemas técnicos |
+| Gestión de Proyecto | Coordinación del proyecto, documentación TDSP, reuniones de revisión de resultados. | $300 | Incluye redacción de los documentos `project_charter.md`, `data_report.md` y `model_report.md` |
+| Contingencias | Fondo para imprevistos (aprox. 10% del total estimado). | $1,095 | Buffer para iteraciones adicionales de entrenamiento, ajuste de arquitectura o problemas de infraestructura no previstos |
+| **TOTAL ESTIMADO DEL PROYECTO** | | **$12,045** | |
+
+> **Notas generales:**
+> - Los costos de personal corresponden a tarifas de referencia para perfiles
+>   de ciencia de datos en el mercado latinoamericano (2025).
+> - El costo de infraestructura es significativamente menor que el promedio de
+>   proyectos de visión por computadora debido al tamaño reducido del dataset
+>   CEDAR (~35 MB, 1,649 imágenes) y a la disponibilidad de herramientas
+>   gratuitas para el despliegue.
+> - Este presupuesto corresponde a un proyecto piloto/académico. Un despliegue
+>   en producción bancaria requeriría una estimación separada que incluya
+>   infraestructura cloud empresarial (AWS/GCP/Azure), costos de integración
+>   con sistemas internos, y mantenimiento continuo del modelo.
 
 ## 10. Stakeholders (partes interesadas)
 
