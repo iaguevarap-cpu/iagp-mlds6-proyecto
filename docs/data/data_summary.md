@@ -1,7 +1,7 @@
 **Proyecto:** Identificación de Firmas Adulteradas con Redes Siamesas  
 **Autor:** Ivonne Alexandra Guevara Prieto — CC 1032376081  
 **Fecha:** Junio 2025  
-**Notebook de referencia:** `scripts/2_exploratory_data_analysis.ipynb`
+**Notebook de referencia:** `scripts/2_exploratory_data_analysis.ipynb` 
 
 ---
 
