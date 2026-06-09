@@ -1,5 +1,6 @@
 import streamlit as st
 import keras
+import tensorflow as tf
 import numpy as np
 import cv2
 from PIL import Image
@@ -12,47 +13,43 @@ st.set_page_config(
     layout="centered"
 )
 
-# ── Constantes (ajustables según política del negocio) ────────────────────
-MODEL_PATH = os.getenv(
-    "MODEL_PATH",         "modelo_siames_firmas_final_v2.keras")
-UMBRAL_GENUINO = float(os.getenv("UMBRAL_GENUINO",     0.40))
+# ── Capa personalizada L1 — DEBE definirse ANTES de load_model ───────────
+# Sin esto, Keras no puede deserializar 'firmas>DistanciaL1' del archivo .keras
+@keras.saving.register_keras_serializable(package="firmas")
+class DistanciaL1(keras.layers.Layer):
+    """Distancia L1 entre dos embeddings de la Red Siamesa."""
+    def call(self, tensors):
+        return tf.abs(tensors[0] - tensors[1])
+    def compute_output_shape(self, input_shape):
+        return input_shape[0]
+
+# ── Constantes ────────────────────────────────────────────────────────────
+MODEL_PATH         = os.getenv("MODEL_PATH",         "modelo_siames_firmas_v2.keras")
+UMBRAL_GENUINO     = float(os.getenv("UMBRAL_GENUINO",     0.40))
 UMBRAL_FALSIFICADA = float(os.getenv("UMBRAL_FALSIFICADA", 0.60))
 
-# ── Carga del modelo (cacheado para no recargar en cada interacción) ──────
-
-
+# ── Carga del modelo (cacheado) ───────────────────────────────────────────
 @st.cache_resource
 def cargar_modelo():
     if not os.path.exists(MODEL_PATH):
         st.error(
             f"❌ Modelo no encontrado en '{MODEL_PATH}'. "
-            "Asegúrese de que 'modelo_siames_firmas_final.keras' "
+            "Asegúrese de que 'modelo_siames_firmas_v2.keras' "
             "está en la raíz del repositorio."
         )
         st.stop()
-    keras.config.enable_unsafe_deserialization()
     return keras.models.load_model(MODEL_PATH)
 
 # ── Preprocesamiento ──────────────────────────────────────────────────────
-
-
 def preprocesar_desde_pil(imagen_pil, tam=(105, 105)):
-    """
-    Convierte una imagen PIL a array numpy preprocesado para la Red Siamesa.
-    - Escala de grises, redimensión a 105×105, normalización [0,1], reshape (105,105,1).
-    """
+    """Convierte PIL → array numpy (105,105,1) normalizado [0,1]."""
     img = np.array(imagen_pil.convert("L"))
     img = cv2.resize(img, tam)
     img = img / 255.0
     return img.reshape(tam[0], tam[1], 1).astype(np.float32)
 
 # ── Inferencia ────────────────────────────────────────────────────────────
-
-
 def verificar_firma(img_ref, img_sosp, modelo):
-    """
-    Compara dos imágenes preprocesadas y retorna resultado, score, alerta y color.
-    """
     score = modelo.predict(
         [img_ref.reshape(1, 105, 105, 1),
          img_sosp.reshape(1, 105, 105, 1)],
@@ -66,8 +63,7 @@ def verificar_firma(img_ref, img_sosp, modelo):
     else:
         return "🚨 FALSIFICADO", float(score), "Rechazo y alerta de fraude",  "red"
 
-
-# ── Interfaz de usuario ───────────────────────────────────────────────────
+# ── Interfaz ──────────────────────────────────────────────────────────────
 st.title("✍️ Verificador de Firmas Adulteradas")
 st.markdown(
     "Sistema de apoyo para la detección de firmas falsificadas basado en "
@@ -109,40 +105,34 @@ if st.button("🔍 Verificar firma", type="primary", use_container_width=True):
         st.error("⚠️ Por favor suba ambas imágenes antes de verificar.")
     else:
         with st.spinner("Analizando el par de firmas..."):
-            modelo = cargar_modelo()
-            img_ref_arr = preprocesar_desde_pil(Image.open(archivo_ref))
-            img_sosp_arr = preprocesar_desde_pil(Image.open(archivo_sosp))
+            modelo_cargado = cargar_modelo()
+            img_ref_arr    = preprocesar_desde_pil(Image.open(archivo_ref))
+            img_sosp_arr   = preprocesar_desde_pil(Image.open(archivo_sosp))
             resultado, score, alerta, color = verificar_firma(
-                img_ref_arr, img_sosp_arr, modelo
+                img_ref_arr, img_sosp_arr, modelo_cargado
             )
 
         st.markdown(f"### Resultado: :{color}[{resultado}]")
 
-        col_score, col_umbral = st.columns(2)
-        with col_score:
-            st.metric(label="Score de falsificación", value=f"{score:.4f}")
-        with col_umbral:
-            st.metric(
-                label="Umbrales configurados",
-                value=f"{UMBRAL_GENUINO} / {UMBRAL_FALSIFICADA}"
-            )
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.metric("Score de falsificación", f"{score:.4f}")
+        with col_b:
+            st.metric("Umbrales", f"{UMBRAL_GENUINO} / {UMBRAL_FALSIFICADA}")
 
         st.info(f"**Acción recomendada:** {alerta}")
 
         with st.expander("ℹ️ Cómo interpretar el score"):
             st.markdown(
-                f"""
-                | Score | Resultado | Acción |
-                |---|---|---|
-                | < {UMBRAL_GENUINO} | ✅ GENUINO | Aprobación automática |
-                | {UMBRAL_GENUINO} – {UMBRAL_FALSIFICADA} | ⚠️ INCIERTO | Derivar a revisión humana |
-                | > {UMBRAL_FALSIFICADA} | 🚨 FALSIFICADO | Rechazo y alerta de fraude |
-                """
+                f"| Score | Resultado | Acción |\n"
+                f"|---|---|---|\n"
+                f"| < {UMBRAL_GENUINO} | ✅ GENUINO | Aprobación automática |\n"
+                f"| {UMBRAL_GENUINO}–{UMBRAL_FALSIFICADA} | ⚠️ INCIERTO | Revisión humana |\n"
+                f"| > {UMBRAL_FALSIFICADA} | 🚨 FALSIFICADO | Rechazo + alerta |"
             )
 
         st.divider()
         st.caption(
             "⚠️ Este sistema es una herramienta de **apoyo a la decisión**, "
-            "no reemplaza al perito calígrafo. Los casos en zona de incertidumbre "
-            "deben ser revisados por un especialista antes de tomar una decisión definitiva."
+            "no reemplaza al perito calígrafo."
         )
