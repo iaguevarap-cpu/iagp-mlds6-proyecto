@@ -5,6 +5,9 @@ import cv2
 from PIL import Image
 import os
 
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 # ── Configuración de la página ────────────────────────────────────────────
 st.set_page_config(
     page_title="Verificador de Firmas",
