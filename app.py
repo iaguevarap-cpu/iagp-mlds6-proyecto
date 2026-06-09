@@ -13,11 +13,14 @@ st.set_page_config(
 )
 
 # ── Constantes (ajustables según política del negocio) ────────────────────
-MODEL_PATH         = os.getenv("MODEL_PATH",         "modelo_siames_firmas_final.keras")
-UMBRAL_GENUINO     = float(os.getenv("UMBRAL_GENUINO",     0.40))
+MODEL_PATH = os.getenv(
+    "MODEL_PATH",         "modelo_siames_firmas_final.keras")
+UMBRAL_GENUINO = float(os.getenv("UMBRAL_GENUINO",     0.40))
 UMBRAL_FALSIFICADA = float(os.getenv("UMBRAL_FALSIFICADA", 0.60))
 
 # ── Carga del modelo (cacheado para no recargar en cada interacción) ──────
+
+
 @st.cache_resource
 def cargar_modelo():
     if not os.path.exists(MODEL_PATH):
@@ -30,6 +33,8 @@ def cargar_modelo():
     return keras.models.load_model(MODEL_PATH)
 
 # ── Preprocesamiento ──────────────────────────────────────────────────────
+
+
 def preprocesar_desde_pil(imagen_pil, tam=(105, 105)):
     """
     Convierte una imagen PIL a array numpy preprocesado para la Red Siamesa.
@@ -41,6 +46,8 @@ def preprocesar_desde_pil(imagen_pil, tam=(105, 105)):
     return img.reshape(tam[0], tam[1], 1).astype(np.float32)
 
 # ── Inferencia ────────────────────────────────────────────────────────────
+
+
 def verificar_firma(img_ref, img_sosp, modelo):
     """
     Compara dos imágenes preprocesadas y retorna resultado, score, alerta y color.
@@ -57,6 +64,7 @@ def verificar_firma(img_ref, img_sosp, modelo):
         return "⚠️ INCIERTO",   float(score), "Derivar a revisión humana",   "orange"
     else:
         return "🚨 FALSIFICADO", float(score), "Rechazo y alerta de fraude",  "red"
+
 
 # ── Interfaz de usuario ───────────────────────────────────────────────────
 st.title("✍️ Verificador de Firmas Adulteradas")
@@ -100,8 +108,8 @@ if st.button("🔍 Verificar firma", type="primary", use_container_width=True):
         st.error("⚠️ Por favor suba ambas imágenes antes de verificar.")
     else:
         with st.spinner("Analizando el par de firmas..."):
-            modelo       = cargar_modelo()
-            img_ref_arr  = preprocesar_desde_pil(Image.open(archivo_ref))
+            modelo = cargar_modelo()
+            img_ref_arr = preprocesar_desde_pil(Image.open(archivo_ref))
             img_sosp_arr = preprocesar_desde_pil(Image.open(archivo_sosp))
             resultado, score, alerta, color = verificar_firma(
                 img_ref_arr, img_sosp_arr, modelo
